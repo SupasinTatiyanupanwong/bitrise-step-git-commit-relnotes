@@ -53,12 +53,11 @@ type_tags:
 # Use the `deps` property to declare dependencies that you can fetch from an OS dependency manager.
 # You can find more information about this in the documentation here:
 # https://devcenter.bitrise.io/en/steps-and-workflows/developing-your-own-bitrise-step/developing-a-new-step.html#submodules-and-step-dependencies
-#
-# deps:
-#   brew:
-#   - name: cmake
-#   apt_get:
-#   - name: cmake
+deps:
+  brew:
+  - name: git
+  apt_get:
+  - name: git
 
 
 toolkit:
@@ -66,25 +65,11 @@ toolkit:
     entry_file: step.sh
 
 
-inputs:
-  - example_step_input: Default Value - you can leave this empty if you want to
-    opts:
-      title: "Example Step Input"
-      summary: Summary. No more than 2-3 sentences.
-      description: |
-        Description of this input.
-
-        Can be Markdown formatted text.
-      is_expand: true
-      is_required: true
-      value_options: []
+inputs: []
 
 outputs:
-  - EXAMPLE_STEP_OUTPUT:
+  - COMMIT_RELNOTES:
     opts:
-      title: "Example Step Output"
-      summary: Summary. No more than 2-3 sentences.
-      description: |
-        Description of this output.
-
-        Can be Markdown formatted text.
+      title: "Environment variable containing the generated commit release notes"
+      summary: ""
+      description: """

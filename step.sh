@@ -1,22 +1,42 @@
 #!/bin/bash
-set -ex
 
-echo "This is the value specified for the input 'example_step_input': ${example_step_input}"
+# Fail if any command fails
+set -e
 
-#
-# --- Export Environment Variables for other Steps:
-# You can export Environment Variables for other Steps with
-#  envman, which is automatically installed by `bitrise setup`.
-# A very simple example:
-envman add --key EXAMPLE_STEP_OUTPUT --value 'the value you want to share'
-# Envman can handle piped inputs, which is useful if the text you want to
-# share is complex and you don't want to deal with proper bash escaping:
-#  cat file_with_complex_input | envman add --KEY EXAMPLE_STEP_OUTPUT
-# You can find more usage examples on envman's GitHub page
-#  at: https://github.com/bitrise-io/envman
+# Read all tags, separate them into an array
+all_tags=$(git tag -l | wc -l)
 
-#
-# --- Exit codes:
-# The exit code of your Step is very important. If you return
-#  with a 0 exit code `bitrise` will register your Step as "successful".
-# Any non zero exit code will be registered as "failed" by `bitrise`.
+if [ "$all_tags" = 0 ]; then
+    # No tags, exit.
+    echo "Repository contains no tags. Please make a tag first."
+    exit 1
+elif [ "$all_tags" = 1 ]; then
+    echo "Fetching commits since first commit."
+
+    # We have first tag, fetch since first commit (i.e., don't specify previous tag)
+    changelog="$(git log --pretty=format:"%b")"
+else
+    echo "Fetching commits since last tag."
+
+    # We have many tags, fetch since last one
+    latest_tag=$(git describe --tags)
+    previous_tag="$(git describe --abbrev=0 --tags "$(git rev-list --tags --skip=1 --max-count=1)")"
+
+    # Get commit messages since previous tag
+    changelog="$(git log --pretty=format:"%b" "$latest_tag"..."$previous_tag")"
+fi
+
+relnotes_raw="$(echo "$changelog" | grep "RelNote: ")"
+relnotes="${relnotes_raw//"RelNote: "/ - }"
+
+# Output collected information
+echo "Committer: $(git log --pretty=format:"%ce" HEAD^..HEAD)"
+echo "Latest tag: $latest_tag"
+echo "Previous tag: $previous_tag"
+echo "RelNotes:"
+echo "$relnotes"
+
+# Set environment variable for bitrise
+envman add --key COMMIT_RELNOTES --value "$relnotes"
+
+exit 0
