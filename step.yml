@@ -72,4 +72,4 @@ outputs:
     opts:
       title: "Environment variable containing the generated commit release notes"
       summary: ""
-      description: """
+      description: ""
